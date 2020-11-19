@@ -1,0 +1,39 @@
+version: "3.7"
+
+services:
+  osnfs:
+    container_name: osnfs
+    build:
+      context: ..
+      dockerfile: ./deploy/Dockerfile
+    working_dir: /go/src/osnfs
+    entrypoint: go run ./cmd/osnfs/osnfs.go
+    environment:
+      - APP_ENV=local
+    stop_signal: SIGINT
+    volumes:
+      - ./..:/go/src/osnfs
+    ports:
+      - 8080:8080
+    networks:
+      - osnfs-net
+
+  tests:
+    build:
+      context: ..
+      dockerfile: ./deploy/Dockerfile
+    working_dir: /var/www/osnfs
+    command: go test -v ./...
+    volumes:
+      - ./..:/var/www/osnfs
+
+  linter:
+    image: golangci/golangci-lint:latest
+    working_dir: /app
+    command: golangci-lint run -v
+    volumes:
+      - ./..:/app
+
+networks:
+  osnfs-net:
+    driver: bridge
