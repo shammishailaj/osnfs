@@ -1,7 +1,35 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"net"
+	"os"
+
+	osfs "github.com/go-git/go-billy/v5/osfs"
+	nfs "github.com/willscott/go-nfs"
+	nfshelper "github.com/willscott/go-nfs/helpers"
+)
 
 func main() {
-	fmt.Printf("This is just a trial")
+	port := ""
+	if len(os.Args) < 2 {
+		fmt.Printf("Usage: osnfscli </path/to/folder> [port]\n")
+		return
+	} else if len(os.Args) == 3 {
+		port = os.Args[2]
+	}
+
+	listener, err := net.Listen("tcp", ":"+port)
+	if err != nil {
+		fmt.Printf("Failed to listen: %v\n", err)
+		return
+	}
+	fmt.Printf("osnfscli server running at %s\n", listener.Addr())
+
+	bfs := osfs.New(os.Args[1])
+	bfsPlusChange := NewChangeOSFS(bfs)
+
+	handler := nfshelper.NewNullAuthHandler(bfsPlusChange)
+	cacheHelper := nfshelper.NewCachingHandler(handler)
+	fmt.Printf("%v", nfs.Serve(listener, cacheHelper))
 }
