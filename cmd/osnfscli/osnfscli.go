@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/shammishailaj/osnfs/internal/app/osnfscli/changeos"
 	"net"
 	"os"
 
@@ -27,9 +28,10 @@ func main() {
 	fmt.Printf("osnfscli server running at %s\n", listener.Addr())
 
 	bfs := osfs.New(os.Args[1])
-	bfsPlusChange := NewChangeOSFS(bfs)
+	bfsPlusChange := changeos.NewChangeOSFS(bfs)
 
 	handler := nfshelper.NewNullAuthHandler(bfsPlusChange)
 	cacheHelper := nfshelper.NewCachingHandler(handler)
 	fmt.Printf("%v", nfs.Serve(listener, cacheHelper))
 }
+
